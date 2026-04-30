@@ -87,9 +87,9 @@
 
   <input type="text" id="nom" placeholder="Ton prénom">
 
-  <div id="categories"></div>
-
   <button onclick="envoyerResultats()">Envoyer les résultats</button>
+
+  <div id="categories"></div>
 
 </div>
 
@@ -116,16 +116,17 @@ const categoriesList = [
 
 const container = document.getElementById("categories");
 
-categoriesList.forEach(cat => {
+// Génération fiable des 14 catégories
+categoriesList.forEach((cat, index) => {
   const div = document.createElement("div");
   div.className = "category";
+  div.dataset.index = index;
 
   const cardsHTML = participants.map(p => 
     `<div class=\"card\" draggable=\"true\">${p}</div>`
   ).join("");
 
   div.innerHTML = `<h2>${cat}</h2><div class=\"cards\">${cardsHTML}</div>`;
-
   container.appendChild(div);
 });
 
@@ -154,7 +155,7 @@ document.addEventListener("dragover", e => {
     const box = child.getBoundingClientRect();
     const offset = e.clientY - box.top - box.height / 2;
     if(offset < 0 && offset > closest.offset){
-      return { offset: offset, element: child };
+      return { offset, element: child };
     } else {
       return closest;
     }
@@ -175,24 +176,21 @@ function envoyerResultats(){
     return;
   }
 
-  const categories = document.querySelectorAll(".category");
+  // IMPORTANT: on force les 14 catégories depuis la liste (pas le DOM)
+  const categoriesDOM = document.querySelectorAll(".category");
 
-  console.log("Catégories détectées:", categories.length);
+  console.log("Catégories DOM détectées:", categoriesDOM.length);
 
-  categories.forEach(cat => {
+  categoriesList.forEach((nomCategorie, i) => {
 
-    const nomCategorie = cat.querySelector("h2")?.innerText;
-    const cards = cat.querySelectorAll(".card");
+    const catDiv = categoriesDOM[i];
+    if(!catDiv) return;
 
-    if(!nomCategorie || cards.length === 0){
-      console.warn("Catégorie ignorée", nomCategorie);
-      return;
-    }
+    const cards = catDiv.querySelectorAll(".card");
 
     let classement = [];
-
-    cards.forEach((c, i) => {
-      classement.push((i+1) + ". " + c.innerText);
+    cards.forEach((c, idx) => {
+      classement.push((idx+1) + ". " + c.innerText);
     });
 
     fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
