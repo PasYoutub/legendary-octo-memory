@@ -76,6 +76,19 @@
   </div>
   <!-- FIN DU BLOC -->
 
+  <button onclick="envoyerResultats()" style="
+    background: gold;
+    color: #0a1f44;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+  ">
+    Envoyer les résultats
+  </button>
+
 </div>
 
 <script>
@@ -121,9 +134,36 @@
       }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
   }
+
+
+  function envoyerResultats() {
+    const categories = document.querySelectorAll('.category');
+
+    categories.forEach(cat => {
+      const nomCategorie = cat.querySelector('h2').innerText;
+      const cartes = cat.querySelectorAll('.card');
+
+      let classement = [];
+      cartes.forEach((carte, index) => {
+        classement.push((index + 1) + ". " + carte.innerText);
+      });
+
+      fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          categorie: nomCategorie,
+          classement: classement.join(" | ")
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    });
+
+    alert("Résultats envoyés !");
+  }
+
 </script>
 
 </body>
 </html>
-
-
