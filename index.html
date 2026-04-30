@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Les Awards des Couilleux</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0a1f44, #123d7a);
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px;
+      background-color: #0a1f44;
+      color: gold;
+      font-size: 2em;
+      font-weight: bold;
+      border-bottom: 3px solid gold;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .category {
+      background-color: #123d7a;
+      border: 2px solid gold;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .category h2 {
+      color: gold;
+      margin-bottom: 10px;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background-color: #1c4fa3;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid gold;
+      cursor: grab;
+    }
+
+    .card.dragging {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  Les Awards des Couilleux
+</header>
+
+<div class="container">
+
+  <!-- BLOCS A COPIER -->
+  <div class="category">
+    <h2>Nom de la catégorie</h2>
+    <div class="cards">
+      <div class="card" draggable="true">Nom 1</div>
+      <div class="card" draggable="true">Nom 2</div>
+      <div class="card" draggable="true">Nom 3</div>
+    </div>
+  </div>
+  <!-- FIN DU BLOC -->
+
+</div>
+
+<script>
+  const cards = document.querySelectorAll('.card');
+  const containers = document.querySelectorAll('.cards');
+
+  let dragged = null;
+
+  cards.forEach(card => {
+    card.addEventListener('dragstart', () => {
+      dragged = card;
+      card.classList.add('dragging');
+    });
+
+    card.addEventListener('dragend', () => {
+      dragged = null;
+      card.classList.remove('dragging');
+    });
+  });
+
+  containers.forEach(container => {
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(container, e.clientY);
+      if (afterElement == null) {
+        container.appendChild(dragged);
+      } else {
+        container.insertBefore(dragged, afterElement);
+      }
+    });
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+</script>
+
+</body>
+</html>
