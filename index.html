@@ -148,16 +148,14 @@ function envoyerResultats() {
     });
 
     fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
-      method: "POST",
-      body: JSON.stringify({
-        nom: nom,
-        categorie: nomCategorie,
-        classement: classement.join(" | ")
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          nom: nom,
+          categorie: nomCategorie,
+          classement: classement.join(" | ")
+        })
+      });
   });
 
   alert("Résultats envoyés !");
