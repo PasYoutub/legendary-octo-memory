@@ -134,29 +134,44 @@ document.addEventListener("dragover", e => {
 
 function envoyerResultats() {
   const nom = document.getElementById("nom").value;
-  if(!nom){ alert("Mets ton prénom"); return; }
+  if (!nom) {
+    alert("Mets ton prénom");
+    return;
+  }
 
-  const categories = document.querySelectorAll('.category');
+  const categories = document.querySelectorAll(".category");
+
+  if (categories.length === 0) {
+    alert("Aucune catégorie détectée");
+    return;
+  }
 
   categories.forEach(cat => {
-    const nomCategorie = cat.querySelector('h2').innerText;
-    const cartes = cat.querySelectorAll('.card');
+    const nomCategorie = cat.querySelector("h2").innerText;
+    const cartes = cat.querySelectorAll(".card");
 
     let classement = [];
+
     cartes.forEach((carte, index) => {
       classement.push((index + 1) + ". " + carte.innerText);
     });
 
-    fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({
-          nom: nom,
-          categorie: nomCategorie,
-          classement: classement.join(" | ")
-        })
-      });
+    fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nom: nom,
+        categorie: nomCategorie,
+        classement: classement.join(" | ")
+      })
+    });
   });
+
+  alert("14 catégories envoyées !");
+}
 
   alert("Résultats envoyés !");
 }
