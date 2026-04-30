@@ -52,8 +52,22 @@
       cursor: grab;
     }
 
-    .card.dragging {
-      opacity: 0.5;
+    input {
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      width: 200px;
+    }
+
+    button {
+      background: gold;
+      color: #0a1f44;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -65,103 +79,89 @@
 
 <div class="container">
 
-  <!-- BLOCS A COPIER -->
-  <div class="category">
-    <h2>Nom de la catégorie</h2>
-    <div class="cards">
-      <div class="card" draggable="true">Nom 1</div>
-      <div class="card" draggable="true">Nom 2</div>
-      <div class="card" draggable="true">Nom 3</div>
-    </div>
-  </div>
-  <!-- FIN DU BLOC -->
+  <input type="text" id="nom" placeholder="Ton prénom">
 
-  <button onclick="envoyerResultats()" style="
-    background: gold;
-    color: #0a1f44;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 20px;
-  ">
-    Envoyer les résultats
-  </button>
+  <!-- 14 CATÉGORIES -->
+
+  <div id="categories"></div>
+
+  <button onclick="envoyerResultats()">Envoyer les résultats</button>
 
 </div>
 
 <script>
-  const cards = document.querySelectorAll('.card');
-  const containers = document.querySelectorAll('.cards');
 
-  let dragged = null;
+const noms = ["Nom 1","Nom 2","Nom 3","Nom 4"];
+const categoriesList = [
+  "Le plus drôle","Le plus intelligent","Le plus bg","Le plus sportif",
+  "Le plus fainéant","Le plus drôle malgré lui","Le plus stylé","Le plus bizarre",
+  "Le plus charismatique","Le plus bavard","Le plus discret","Le plus en retard",
+  "Le boss","Le pire prof (lol)"
+];
 
-  cards.forEach(card => {
-    card.addEventListener('dragstart', () => {
-      dragged = card;
-      card.classList.add('dragging');
-    });
+const container = document.getElementById("categories");
 
-    card.addEventListener('dragend', () => {
-      dragged = null;
-      card.classList.remove('dragging');
-    });
+categoriesList.forEach(cat => {
+  const div = document.createElement("div");
+  div.className = "category";
+
+  div.innerHTML = `<h2>${cat}</h2><div class="cards">${noms.map(n => `<div class="card" draggable="true">${n}</div>`).join("")}</div>`;
+
+  container.appendChild(div);
+});
+
+let dragged = null;
+
+document.addEventListener("dragstart", e => {
+  if(e.target.classList.contains("card")){
+    dragged = e.target;
+  }
+});
+
+document.addEventListener("dragover", e => {
+  e.preventDefault();
+  const container = e.target.closest(".cards");
+  if (!container) return;
+
+  const after = [...container.children].find(child => {
+    const box = child.getBoundingClientRect();
+    return e.clientY < box.top + box.height / 2;
   });
 
-  containers.forEach(container => {
-    container.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      const afterElement = getDragAfterElement(container, e.clientY);
-      if (afterElement == null) {
-        container.appendChild(dragged);
-      } else {
-        container.insertBefore(dragged, afterElement);
+  if(after) container.insertBefore(dragged, after);
+  else container.appendChild(dragged);
+});
+
+function envoyerResultats() {
+  const nom = document.getElementById("nom").value;
+  if(!nom){ alert("Mets ton prénom"); return; }
+
+  const categories = document.querySelectorAll('.category');
+
+  categories.forEach(cat => {
+    const nomCategorie = cat.querySelector('h2').innerText;
+    const cartes = cat.querySelectorAll('.card');
+
+    let classement = [];
+    cartes.forEach((carte, index) => {
+      classement.push((index + 1) + ". " + carte.innerText);
+    });
+
+    fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
+      method: "POST",
+      body: JSON.stringify({
+        nom: nom,
+        categorie: nomCategorie,
+        classement: classement.join(" | ")
+      }),
+      headers: {
+        "Content-Type": "application/json"
       }
     });
   });
 
-  function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
-
-    return draggableElements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: child };
-      } else {
-        return closest;
-      }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
-
-
-  function envoyerResultats() {
-    const categories = document.querySelectorAll('.category');
-
-    categories.forEach(cat => {
-      const nomCategorie = cat.querySelector('h2').innerText;
-      const cartes = cat.querySelectorAll('.card');
-
-      let classement = [];
-      cartes.forEach((carte, index) => {
-        classement.push((index + 1) + ". " + carte.innerText);
-      });
-
-      fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
-        method: "POST",
-        body: JSON.stringify({
-          categorie: nomCategorie,
-          classement: classement.join(" | ")
-        }),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-    });
-
-    alert("Résultats envoyés !");
-  }
+  alert("Résultats envoyés !");
+}
 
 </script>
 
