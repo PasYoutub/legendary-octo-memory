@@ -69,6 +69,7 @@
       border-radius: 8px;
       border: 1px solid gold;
       cursor: grab;
+      user-select: none;
     }
 
     .card.dragging {
@@ -97,20 +98,20 @@
 const participants = ["Nom 1","Nom 2","Nom 3","Nom 4","Nom 5"];
 
 const categoriesList = [
+  "Le plus drôle",
+  "Le plus fainéant",
+  "Le plus en galère",
+  "Le plus stylé",
+  "Le plus sportif",
+  "Le plus charismatique",
+  "Le plus organisé",
+  "Le plus intelligent",
+  "Le roi de la classe",
   "Le plus en retard",
   "Le boss",
   "Le plus discret",
-  "Le plus sportif",
-  "Le plus stylé",
-  "Le plus drôle",
-  "Le plus intelligent",
-  "Le plus fainéant",
   "Le plus bavard",
-  "Le plus bizarre",
-  "Le plus charismatique",
-  "Le plus en galère",
-  "Le plus organisé",
-  "Le roi de la classe"
+  "Le plus bizarre"
 ];
 
 const container = document.getElementById("categories");
@@ -119,9 +120,12 @@ categoriesList.forEach(cat => {
   const div = document.createElement("div");
   div.className = "category";
 
-  const cardsHTML = participants.map(p => `<div class=\"card\" draggable=\"true\">${p}</div>`).join("");
+  const cardsHTML = participants.map(p => 
+    `<div class=\"card\" draggable=\"true\">${p}</div>`
+  ).join("");
 
   div.innerHTML = `<h2>${cat}</h2><div class=\"cards\">${cardsHTML}</div>`;
+
   container.appendChild(div);
 });
 
@@ -141,12 +145,12 @@ document.addEventListener("dragend", e => {
 });
 
 document.addEventListener("dragover", e => {
-  const containerCards = e.target.closest(".cards");
-  if(!containerCards) return;
+  const cardsContainer = e.target.closest(".cards");
+  if(!cardsContainer) return;
 
   e.preventDefault();
 
-  const after = [...containerCards.querySelectorAll(".card:not(.dragging)")].reduce((closest, child) => {
+  const after = [...cardsContainer.querySelectorAll(".card:not(.dragging)")].reduce((closest, child) => {
     const box = child.getBoundingClientRect();
     const offset = e.clientY - box.top - box.height / 2;
     if(offset < 0 && offset > closest.offset){
@@ -157,16 +161,19 @@ document.addEventListener("dragover", e => {
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 
   if(after == null){
-    containerCards.appendChild(dragged);
+    cardsContainer.appendChild(dragged);
   } else {
-    containerCards.insertBefore(dragged, after);
+    cardsContainer.insertBefore(dragged, after);
   }
 });
 
 function envoyerResultats(){
 
   const nom = document.getElementById("nom").value;
-  if(!nom){ alert("Entre ton prénom"); return; }
+  if(!nom){
+    alert("Entre ton prénom");
+    return;
+  }
 
   const categories = document.querySelectorAll(".category");
 
@@ -174,21 +181,23 @@ function envoyerResultats(){
 
   categories.forEach(cat => {
 
-    const nomCategorie = cat.querySelector("h2").innerText;
+    const nomCategorie = cat.querySelector("h2")?.innerText;
     const cards = cat.querySelectorAll(".card");
+
+    if(!nomCategorie || cards.length === 0){
+      console.warn("Catégorie ignorée", nomCategorie);
+      return;
+    }
 
     let classement = [];
 
     cards.forEach((c, i) => {
-      classement.push((i+1)+". "+c.innerText);
+      classement.push((i+1) + ". " + c.innerText);
     });
 
-    fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
+    fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
       method: "POST",
       mode: "no-cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify({
         nom: nom,
         categorie: nomCategorie,
@@ -198,7 +207,7 @@ function envoyerResultats(){
 
   });
 
-  alert("Résultats envoyés !");
+  alert("Envoi terminé !");
 }
 
 </script>
