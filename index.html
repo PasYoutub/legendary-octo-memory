@@ -25,6 +25,25 @@
       padding: 20px;
     }
 
+    input {
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      width: 220px;
+    }
+
+    button {
+      background: gold;
+      color: #0a1f44;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
     .category {
       background-color: #123d7a;
       border: 2px solid gold;
@@ -52,22 +71,8 @@
       cursor: grab;
     }
 
-    input {
-      padding: 10px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      border: none;
-      width: 200px;
-    }
-
-    button {
-      background: gold;
-      color: #0a1f44;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
+    .card.dragging {
+      opacity: 0.5;
     }
   </style>
 </head>
@@ -81,8 +86,6 @@
 
   <input type="text" id="nom" placeholder="Ton prénom">
 
-  <!-- 14 CATÉGORIES -->
-
   <div id="categories"></div>
 
   <button onclick="envoyerResultats()">Envoyer les résultats</button>
@@ -91,12 +94,23 @@
 
 <script>
 
-const noms = ["Nom 1","Nom 2","Nom 3","Nom 4"];
+const participants = ["Nom 1","Nom 2","Nom 3","Nom 4","Nom 5"];
+
 const categoriesList = [
-  "Le plus drôle","Le plus intelligent","Le plus bg","Le plus sportif",
-  "Le plus fainéant","Le plus drôle malgré lui","Le plus stylé","Le plus bizarre",
-  "Le plus charismatique","Le plus bavard","Le plus discret","Le plus en retard",
-  "Le boss","Le pire prof (lol)"
+  "Le plus en retard",
+  "Le boss",
+  "Le plus discret",
+  "Le plus sportif",
+  "Le plus stylé",
+  "Le plus drôle",
+  "Le plus intelligent",
+  "Le plus fainéant",
+  "Le plus bavard",
+  "Le plus bizarre",
+  "Le plus charismatique",
+  "Le plus en galère",
+  "Le plus organisé",
+  "Le roi de la classe"
 ];
 
 const container = document.getElementById("categories");
@@ -105,8 +119,9 @@ categoriesList.forEach(cat => {
   const div = document.createElement("div");
   div.className = "category";
 
-  div.innerHTML = `<h2>${cat}</h2><div class="cards">${noms.map(n => `<div class="card" draggable="true">${n}</div>`).join("")}</div>`;
+  const cardsHTML = participants.map(p => `<div class=\"card\" draggable=\"true\">${p}</div>`).join("");
 
+  div.innerHTML = `<h2>${cat}</h2><div class=\"cards\">${cardsHTML}</div>`;
   container.appendChild(div);
 });
 
@@ -115,45 +130,57 @@ let dragged = null;
 document.addEventListener("dragstart", e => {
   if(e.target.classList.contains("card")){
     dragged = e.target;
+    e.target.classList.add("dragging");
+  }
+});
+
+document.addEventListener("dragend", e => {
+  if(e.target.classList.contains("card")){
+    e.target.classList.remove("dragging");
   }
 });
 
 document.addEventListener("dragover", e => {
+  const containerCards = e.target.closest(".cards");
+  if(!containerCards) return;
+
   e.preventDefault();
-  const container = e.target.closest(".cards");
-  if (!container) return;
 
-  const after = [...container.children].find(child => {
+  const after = [...containerCards.querySelectorAll(".card:not(.dragging)")].reduce((closest, child) => {
     const box = child.getBoundingClientRect();
-    return e.clientY < box.top + box.height / 2;
-  });
+    const offset = e.clientY - box.top - box.height / 2;
+    if(offset < 0 && offset > closest.offset){
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
 
-  if(after) container.insertBefore(dragged, after);
-  else container.appendChild(dragged);
+  if(after == null){
+    containerCards.appendChild(dragged);
+  } else {
+    containerCards.insertBefore(dragged, after);
+  }
 });
 
-function envoyerResultats() {
+function envoyerResultats(){
+
   const nom = document.getElementById("nom").value;
-  if (!nom) {
-    alert("Mets ton prénom");
-    return;
-  }
+  if(!nom){ alert("Entre ton prénom"); return; }
 
   const categories = document.querySelectorAll(".category");
 
-  if (categories.length === 0) {
-    alert("Aucune catégorie détectée");
-    return;
-  }
+  console.log("Catégories détectées:", categories.length);
 
   categories.forEach(cat => {
+
     const nomCategorie = cat.querySelector("h2").innerText;
-    const cartes = cat.querySelectorAll(".card");
+    const cards = cat.querySelectorAll(".card");
 
     let classement = [];
 
-    cartes.forEach((carte, index) => {
-      classement.push((index + 1) + ". " + carte.innerText);
+    cards.forEach((c, i) => {
+      classement.push((i+1)+". "+c.innerText);
     });
 
     fetch("https://script.google.com/macros/s/AKfycby5eh6MLgEYDzzphfy2FKC6ym1rnfs6jq3eTPI8Bi7eSI39n64Ka3m-V7kLVxFsjqulVQ/exec", {
@@ -168,10 +195,8 @@ function envoyerResultats() {
         classement: classement.join(" | ")
       })
     });
-  });
 
-  alert("14 catégories envoyées !");
-}
+  });
 
   alert("Résultats envoyés !");
 }
