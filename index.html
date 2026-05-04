@@ -95,14 +95,11 @@
 
 <script>
 
-// 🔑 TES INFOS SUPABASE
+// 🔑 SUPABASE
 const SUPABASE_URL = "https://hbequjtuqflxhduoyeml.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhiZXF1anR1cWZseGhkdW95ZW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTE3ODAsImV4cCI6MjA5MzQ2Nzc4MH0.rsVAxcY1_n9vh51c6tdujKXhOtfWKpiGtbH5htbeGkw";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// 👥 participants
-const participants = ["Nom 1","Nom 2","Nom 3","Nom 4","Nom 5"];
 
 // 📚 catégories
 const categoriesList = [
@@ -122,20 +119,37 @@ const categoriesList = [
   "Le plus bizarre"
 ];
 
+// 👥 noms différents par catégorie
+const participantsParCategorie = {
+  "Le plus drôle": ["Lucas", "Mathis", "Adam"],
+  "Le plus fainéant": ["Lucas", "Enzo", "Noah"],
+  "Le plus en galère": ["Hugo", "Léo", "Adam"],
+  "Le plus stylé": ["Noah", "Lucas", "Tom"],
+  "Le plus sportif": ["Adam", "Hugo", "Léo"],
+  "Le plus charismatique": ["Lucas", "Tom", "Enzo"],
+  "Le plus organisé": ["Mathis", "Léo", "Noah"],
+  "Le plus intelligent": ["Adam", "Mathis", "Lucas"],
+  "Le roi de la classe": ["Lucas", "Adam", "Hugo"],
+  "Le plus en retard": ["Enzo", "Tom", "Noah"],
+  "Le boss": ["Lucas", "Adam", "Mathis"],
+  "Le plus discret": ["Noah", "Hugo", "Léo"],
+  "Le plus bavard": ["Tom", "Enzo", "Lucas"],
+  "Le plus bizarre": ["Adam", "Noah", "Hugo"]
+};
+
 const container = document.getElementById("categories");
 
-// 🧱 génération des catégories
+// 🧱 génération UI
 categoriesList.forEach(cat => {
 
   const div = document.createElement("div");
   div.className = "category";
 
-  const cards = participants.map(p =>
+  const cards = (participantsParCategorie[cat] || []).map(p =>
     `<div class="card" draggable="true">${p}</div>`
   ).join("");
 
   div.innerHTML = `<h2>${cat}</h2><div class="cards">${cards}</div>`;
-
   container.appendChild(div);
 });
 
@@ -167,7 +181,7 @@ document.addEventListener("dragover", e => {
       const offset = e.clientY - box.top - box.height/2;
 
       if(offset < 0 && offset > closest.offset){
-        return {offset: offset, element: child};
+        return {offset, element: child};
       } else {
         return closest;
       }
@@ -180,7 +194,7 @@ document.addEventListener("dragover", e => {
   }
 });
 
-// 🚀 ENVOI (1 requête propre)
+// 🚀 ENVOI SUPABASE
 async function envoyerResultats(){
 
   const nom = document.getElementById("nom").value;
@@ -211,6 +225,7 @@ async function envoyerResultats(){
     .insert([
       {
         nom: nom,
+        date: new Date().toISOString(),
         votes: votes
       }
     ]);
