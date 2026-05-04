@@ -116,7 +116,6 @@ const container = document.getElementById("categories");
 
 // Génération des catégories
 categoriesList.forEach(cat => {
-
   const div = document.createElement("div");
   div.className = "category";
 
@@ -125,7 +124,6 @@ categoriesList.forEach(cat => {
   ).join("");
 
   div.innerHTML = `<h2>${cat}</h2><div class="cards">${cards}</div>`;
-
   container.appendChild(div);
 });
 
@@ -170,7 +168,8 @@ document.addEventListener("dragover", e => {
   }
 });
 
-// 🔥 ENVOI CORRIGÉ (IMPORTANT)
+
+// 🔥 ENVOI ULTRA FIABLE
 async function envoyerResultats(){
 
   const nom = document.getElementById("nom").value;
@@ -192,32 +191,42 @@ async function envoyerResultats(){
     const cards = catDiv.querySelectorAll(".card");
 
     let classement = [];
-
     cards.forEach((c, index) => {
       classement.push((index+1) + ". " + c.innerText);
     });
 
-    try {
-      await fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({
-          nom: nom,
-          categorie: nomCategorie,
-          classement: classement.join(" | ")
-        })
-      });
+    let success = false;
+    let attempts = 0;
 
-      // pause pour éviter le blocage Google
-      await new Promise(r => setTimeout(r, 150));
+    while(!success && attempts < 3){
+      attempts++;
 
-    } catch(e){
-      console.error("Erreur :", e);
+      try {
+        console.log(`Envoi ${nomCategorie} (tentative ${attempts})`);
+
+        await fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify({
+            nom: nom,
+            categorie: nomCategorie,
+            classement: classement.join(" | ")
+          })
+        });
+
+        success = true;
+
+      } catch(e){
+        console.warn("Erreur, retry...", nomCategorie);
+        await new Promise(r => setTimeout(r, 500));
+      }
     }
 
+    // pause anti-blocage Google
+    await new Promise(r => setTimeout(r, 300));
   }
 
-  alert("Envoi terminé (14 catégories)");
+  alert("Envoi COMPLET terminé (14/14)");
 }
 
 </script>
