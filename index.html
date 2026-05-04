@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Les Awards des Couilleux</title>
+
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       background: linear-gradient(135deg, #0a1f44, #123d7a);
       color: white;
     }
@@ -14,7 +15,6 @@
     header {
       text-align: center;
       padding: 30px;
-      background-color: #0a1f44;
       color: gold;
       font-size: 2em;
       font-weight: bold;
@@ -30,14 +30,13 @@
       margin-bottom: 20px;
       border-radius: 8px;
       border: none;
-      width: 220px;
     }
 
     button {
       background: gold;
       color: #0a1f44;
       border: none;
-      padding: 12px 20px;
+      padding: 12px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -45,7 +44,7 @@
     }
 
     .category {
-      background-color: #123d7a;
+      background: #123d7a;
       border: 2px solid gold;
       border-radius: 10px;
       padding: 15px;
@@ -54,7 +53,6 @@
 
     .category h2 {
       color: gold;
-      margin-bottom: 10px;
     }
 
     .cards {
@@ -64,19 +62,19 @@
     }
 
     .card {
-      background-color: #1c4fa3;
+      background: #1c4fa3;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid gold;
       cursor: grab;
-      user-select: none;
     }
 
-    .card.dragging {
+    .dragging {
       opacity: 0.5;
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -87,7 +85,7 @@
 
   <input type="text" id="nom" placeholder="Ton prénom">
 
-  <button onclick="envoyerResultats()">Envoyer les résultats</button>
+  <button onclick="envoyerResultats()">Envoyer</button>
 
   <div id="categories"></div>
 
@@ -116,20 +114,22 @@ const categoriesList = [
 
 const container = document.getElementById("categories");
 
-// Génération fiable des 14 catégories
-categoriesList.forEach((cat, index) => {
+// Génération des catégories
+categoriesList.forEach(cat => {
+
   const div = document.createElement("div");
   div.className = "category";
-  div.dataset.index = index;
 
-  const cardsHTML = participants.map(p => 
-    `<div class=\"card\" draggable=\"true\">${p}</div>`
+  const cards = participants.map(p =>
+    `<div class="card" draggable="true">${p}</div>`
   ).join("");
 
-  div.innerHTML = `<h2>${cat}</h2><div class=\"cards\">${cardsHTML}</div>`;
+  div.innerHTML = `<h2>${cat}</h2><div class="cards">${cards}</div>`;
+
   container.appendChild(div);
 });
 
+// Drag & Drop
 let dragged = null;
 
 document.addEventListener("dragstart", e => {
@@ -146,29 +146,32 @@ document.addEventListener("dragend", e => {
 });
 
 document.addEventListener("dragover", e => {
-  const cardsContainer = e.target.closest(".cards");
-  if(!cardsContainer) return;
+  const container = e.target.closest(".cards");
+  if(!container) return;
 
   e.preventDefault();
 
-  const after = [...cardsContainer.querySelectorAll(".card:not(.dragging)")].reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = e.clientY - box.top - box.height / 2;
-    if(offset < 0 && offset > closest.offset){
-      return { offset, element: child };
-    } else {
-      return closest;
-    }
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
+  const after = [...container.querySelectorAll(".card:not(.dragging)")]
+    .reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = e.clientY - box.top - box.height/2;
+
+      if(offset < 0 && offset > closest.offset){
+        return {offset: offset, element: child};
+      } else {
+        return closest;
+      }
+    }, {offset: Number.NEGATIVE_INFINITY}).element;
 
   if(after == null){
-    cardsContainer.appendChild(dragged);
+    container.appendChild(dragged);
   } else {
-    cardsContainer.insertBefore(dragged, after);
+    container.insertBefore(dragged, after);
   }
 });
 
-function envoyerResultats(){
+// 🔥 ENVOI CORRIGÉ (IMPORTANT)
+async function envoyerResultats(){
 
   const nom = document.getElementById("nom").value;
   if(!nom){
@@ -176,36 +179,45 @@ function envoyerResultats(){
     return;
   }
 
-  // IMPORTANT: on force les 14 catégories depuis la liste (pas le DOM)
   const categoriesDOM = document.querySelectorAll(".category");
 
-  console.log("Catégories DOM détectées:", categoriesDOM.length);
+  console.log("Catégories détectées:", categoriesDOM.length);
 
-  categoriesList.forEach((nomCategorie, i) => {
+  for(let i = 0; i < categoriesList.length; i++){
 
+    const nomCategorie = categoriesList[i];
     const catDiv = categoriesDOM[i];
-    if(!catDiv) return;
+    if(!catDiv) continue;
 
     const cards = catDiv.querySelectorAll(".card");
 
     let classement = [];
-    cards.forEach((c, idx) => {
-      classement.push((idx+1) + ". " + c.innerText);
+
+    cards.forEach((c, index) => {
+      classement.push((index+1) + ". " + c.innerText);
     });
 
-    fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify({
-        nom: nom,
-        categorie: nomCategorie,
-        classement: classement.join(" | ")
-      })
-    });
+    try {
+      await fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          nom: nom,
+          categorie: nomCategorie,
+          classement: classement.join(" | ")
+        })
+      });
 
-  });
+      // pause pour éviter le blocage Google
+      await new Promise(r => setTimeout(r, 150));
 
-  alert("Envoi terminé !");
+    } catch(e){
+      console.error("Erreur :", e);
+    }
+
+  }
+
+  alert("Envoi terminé (14 catégories)");
 }
 
 </script>
