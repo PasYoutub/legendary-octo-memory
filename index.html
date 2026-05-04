@@ -95,9 +95,9 @@
 
 <script>
 
-// 🔑 REMPLACE ICI
-const SUPABASE_URL = "TON_URL";
-const SUPABASE_KEY = "TA_CLE";
+// 🔑 TES INFOS SUPABASE
+const SUPABASE_URL = "https://hbequjtuqflxhduoyeml.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhiZXF1anR1cWZseGhkdW95ZW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTE3ODAsImV4cCI6MjA5MzQ2Nzc4MH0.rsVAxcY1_n9vh51c6tdujKXhOtfWKpiGtbH5htbeGkw";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -180,7 +180,7 @@ document.addEventListener("dragover", e => {
   }
 });
 
-// 🚀 ENVOI SUPABASE (1 seule requête)
+// 🚀 ENVOI (1 requête propre)
 async function envoyerResultats(){
 
   const nom = document.getElementById("nom").value;
