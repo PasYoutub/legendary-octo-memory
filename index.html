@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Les Awards des Couilleux</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
   <style>
     body {
       margin: 0;
@@ -93,8 +95,16 @@
 
 <script>
 
+// 🔑 REMPLACE ICI
+const SUPABASE_URL = "TON_URL";
+const SUPABASE_KEY = "TA_CLE";
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 👥 participants
 const participants = ["Nom 1","Nom 2","Nom 3","Nom 4","Nom 5"];
 
+// 📚 catégories
 const categoriesList = [
   "Le plus drôle",
   "Le plus fainéant",
@@ -114,8 +124,9 @@ const categoriesList = [
 
 const container = document.getElementById("categories");
 
-// Génération des catégories
+// 🧱 génération des catégories
 categoriesList.forEach(cat => {
+
   const div = document.createElement("div");
   div.className = "category";
 
@@ -124,10 +135,11 @@ categoriesList.forEach(cat => {
   ).join("");
 
   div.innerHTML = `<h2>${cat}</h2><div class="cards">${cards}</div>`;
+
   container.appendChild(div);
 });
 
-// Drag & Drop
+// 🖱️ drag & drop
 let dragged = null;
 
 document.addEventListener("dragstart", e => {
@@ -168,8 +180,7 @@ document.addEventListener("dragover", e => {
   }
 });
 
-
-// 🔥 ENVOI ULTRA FIABLE
+// 🚀 ENVOI SUPABASE (1 seule requête)
 async function envoyerResultats(){
 
   const nom = document.getElementById("nom").value;
@@ -180,53 +191,36 @@ async function envoyerResultats(){
 
   const categoriesDOM = document.querySelectorAll(".category");
 
-  console.log("Catégories détectées:", categoriesDOM.length);
+  let votes = {};
 
-  for(let i = 0; i < categoriesList.length; i++){
+  categoriesList.forEach((nomCategorie, i) => {
 
-    const nomCategorie = categoriesList[i];
     const catDiv = categoriesDOM[i];
-    if(!catDiv) continue;
+    if(!catDiv) return;
 
     const cards = catDiv.querySelectorAll(".card");
 
     let classement = [];
-    cards.forEach((c, index) => {
-      classement.push((index+1) + ". " + c.innerText);
-    });
+    cards.forEach(c => classement.push(c.innerText));
 
-    let success = false;
-    let attempts = 0;
+    votes[nomCategorie] = classement;
+  });
 
-    while(!success && attempts < 3){
-      attempts++;
-
-      try {
-        console.log(`Envoi ${nomCategorie} (tentative ${attempts})`);
-
-        await fetch("https://script.google.com/macros/s/AKfycbzEZOzsAsmTOYcNLD_WeO71V-KVu30v7bm_cvAyh_PHzhV5UYTNhSHtp8cTSkvh39cl4A/exec", {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify({
-            nom: nom,
-            categorie: nomCategorie,
-            classement: classement.join(" | ")
-          })
-        });
-
-        success = true;
-
-      } catch(e){
-        console.warn("Erreur, retry...", nomCategorie);
-        await new Promise(r => setTimeout(r, 500));
+  const { error } = await supabaseClient
+    .from("votes")
+    .insert([
+      {
+        nom: nom,
+        votes: votes
       }
-    }
+    ]);
 
-    // pause anti-blocage Google
-    await new Promise(r => setTimeout(r, 300));
+  if(error){
+    console.error(error);
+    alert("Erreur envoi");
+  } else {
+    alert("Vote enregistré !");
   }
-
-  alert("Envoi COMPLET terminé (14/14)");
 }
 
 </script>
